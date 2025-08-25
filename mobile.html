@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="안심여행">
+    
+    <title>안심여행 스텝 - 모바일</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%232196F3' d='M50 10c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40z'/%3E%3Cpath fill='white' d='M50 20c-16.6 0-30 13.4-30 30s13.4 30 30 30 30-13.4 30-30-13.4-30-30-30z'/%3E%3Cpath fill='%234CAF50' d='M50 30c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20z'/%3E%3Ctext x='50' y='58' text-anchor='middle' font-size='20' fill='white'%3E✈%3C/text%3E%3C/svg%3E">
+    
+    <!-- 카카오맵 API -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=cb042192382ed6a341ff3f2649753c8f&libraries=services"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* 모바일 최적화 스타일 */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+        
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            z-index: 1000;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .floating-btn {
+            position: fixed;
+            z-index: 100;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .emergency-btn {
+            bottom: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            animation: pulse-red 2s infinite;
+        }
+        
+        .location-btn {
+            bottom: 170px;
+            right: 20px;
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+        
+        .search-btn {
+            bottom: 240px;
+            right: 20px;
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3); }
+            50% { box-shadow: 0 4px 20px rgba(244, 67, 54, 0.6); }
+        }
+        
+        .safety-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px;
+            z-index: 50;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .bottom-sheet.show {
+            transform: translateY(0);
+        }
+        
+        .bottom-sheet-handle {
+            width: 40px;
+            height: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            margin: 12px auto 8px;
+        }
+        
+        .marker-custom {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 20px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(76, 175, 80, 0.5);
+            border: 2px solid white;
+        }
+        
+        .marker-hospital {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(33, 150, 243, 0.5);
+            border: 2px solid white;
+        }
+        
+        .marker-aed {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 10px rgba(244, 67, 54, 0.5);
+            border: 2px solid white;
+        }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            display: none;
+            z-index: 150;
+        }
+        
+        @media (max-height: 600px) {
+            .emergency-btn { bottom: 80px; }
+            .location-btn { bottom: 140px; }
+            .search-btn { bottom: 200px; }
+        }
+        
+        /* 터치 피드백 */
+        .touch-feedback:active {
+            transform: scale(0.98);
+            opacity: 0.8;
+        }
+        
+        /* 안전 점수 애니메이션 */
+        .score-circle {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: conic-gradient(#4CAF50 0% var(--score-percent), #e5e7eb var(--score-percent) 100%);
+            padding: 4px;
+        }
+        
+        .score-inner {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 select-none">
+    <div class="app-container">
+        <!-- 안전도 오버레이 -->
+        <div id="safetyOverlay" class="safety-overlay hidden">
+            <div class="flex items-center space-x-3">
+                <div class="score-circle" style="--score-percent: 95%">
+                    <div class="score-inner">
+                        <span class="text-lg font-bold text-green-600" id="currentScore">95</span>
+                        <span class="text-xs text-gray-500">점</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center mb-1">
+                        <span class="text-green-600 text-lg mr-2">🛡️</span>
+                        <span class="font-bold text-green-800">완벽한 안심 지역</span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <div class="flex items-center space-x-4 text-xs">
+                            <span>🏥 2분</span>
+                            <span>⚡ 1분</span>
+                            <span>💊 3분</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="closeOverlay" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 지도 컨테이너 -->
+        <div class="map-container">
+            <div id="map" class="w-full h-full"></div>
+        </div>
+        
+        <!-- 플로팅 버튼들 -->
+        <button id="emergencyFloatingBtn" class="floating-btn emergency-btn touch-feedback">
+            <i class="fas fa-phone"></i>
+        </button>
+        
+        <button id="locationFloatingBtn" class="floating-btn location-btn touch-feedback">
+            <i class="fas fa-location-dot"></i>
+        </button>
+        
+        <button id="searchFloatingBtn" class="floating-btn search-btn touch-feedback">
+            <i class="fas fa-search"></i>
+        </button>
+        
+        <!-- 하단 네비게이션 -->
+        <nav class="bottom-nav">
+            <div class="flex justify-around items-center py-2">
+                <button id="navMap" class="nav-btn flex flex-col items-center py-2 px-3 text-blue-600 touch-feedback">
+                    <i class="fas fa-map text-lg"></i>
+                    <span class="text-xs mt-1">지도</span>
+                </button>
+                <button id="navRecommend" class="nav-btn flex flex-col items-center py-2 px-3 text-gray-400 touch-feedback">
+                    <i class="fas fa-star text-lg"></i>
+                    <span class="text-xs mt-1">추천</span>
+                </button>
+                <button id="navFamily" class="nav-btn flex flex-col items-center py-2 px-3 text-gray-400 touch-feedback">
+                    <i class="fas fa-users text-lg"></i>
+                    <span class="text-xs mt-1">가족</span>
+                </button>
+                <button id="navSafety" class="nav-btn flex flex-col items-center py-2 px-3 text-gray-400 touch-feedback">
+                    <i class="fas fa-shield-check text-lg"></i>
+                    <span class="text-xs mt-1">안전</span>
+                </button>
+                <button id="navMore" class="nav-btn flex flex-col items-center py-2 px-3 text-gray-400 touch-feedback">
+                    <i class="fas fa-ellipsis-h text-lg"></i>
+                    <span class="text-xs mt-1">더보기</span>
+                </button>
+            </div>
+        </nav>
+        
+        <!-- 검색 바텀시트 -->
+        <div id="searchBottomSheet" class="bottom-sheet">
+            <div class="bottom-sheet-handle"></div>
+            <div class="p-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-search mr-2 text-blue-500"></i>
+                    안심 관광지 검색
+                </h3>
+                
+                <div class="mb-4">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="mobileSearchInput" 
+                            placeholder="어디로 여행가시나요?"
+                            class="w-full px-4 py-3 bg-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white border-0"
+                        >
+                        <button id="mobileSearchBtn" class="absolute right-3 top-3 text-blue-500">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">인기 검색어</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="search-tag bg-blue-100 text-blue-800 px-3 py-2 rounded-full text-sm touch-feedback" data-search="제주도">제주도</button>
+                        <button class="search-tag bg-green-100 text-green-800 px-3 py-2 rounded-full text-sm touch-feedback" data-search="설악산">설악산</button>
+                        <button class="search-tag bg-purple-100 text-purple-800 px-3 py-2 rounded-full text-sm touch-feedback" data-search="부산">부산</button>
+                        <button class="search-tag bg-yellow-100 text-yellow-800 px-3 py-2 rounded-full text-sm touch-feedback" data-search="경주">경주</button>
+                        <button class="search-tag bg-pink-100 text-pink-800 px-3 py-2 rounded-full text-sm touch-feedback" data-search="여수">여수</button>
+                        <button class="search-tag bg-indigo-100 text-indigo-800 px-3 py-2 rounded-full text-sm touch-feedback" data-search="전주">전주</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">최근 검색</h4>
+                    <div id="recentSearches" class="space-y-2">
+                        <!-- 최근 검색어들이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 추천 바텀시트 -->
+        <div id="recommendBottomSheet" class="bottom-sheet">
+            <div class="bottom-sheet-handle"></div>
+            <div class="p-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-star mr-2 text-yellow-500"></i>
+                    이번 주말 추천 여행지
+                </h3>
+                
+                <div id="mobileRecommendedPlaces" class="space-y-4">
+                    <!-- 추천 장소들이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 가족 바텀시트 -->
+        <div id="familyBottomSheet" class="bottom-sheet">
+            <div class="bottom-sheet-handle"></div>
+            <div class="p-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-users mr-2 text-purple-500"></i>
+                    가족 여행 설정
+                </h3>
+                
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">우리 가족 구성원</h4>
+                    <div class="space-y-3">
+                        <div class="family-member bg-gray-50 rounded-lg p-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span class="text-sm">👴</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium">할아버지 (78세)</div>
+                                        <div class="text-xs text-gray-500">관절, 고혈압</div>
+                                    </div>
+                                </div>
+                                <button class="text-red-500 text-sm">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="family-member bg-gray-50 rounded-lg p-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
+                                        <span class="text-sm">👶</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium">아기 (2세)</div>
+                                        <div class="text-xs text-gray-500">소아과 필수</div>
+                                    </div>
+                                </div>
+                                <button class="text-red-500 text-sm">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full mt-3 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 touch-feedback">
+                        <i class="fas fa-plus mr-2"></i>
+                        가족 구성원 추가
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">여행 스타일</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="travel-style-btn bg-blue-500 text-white p-3 rounded-lg text-sm touch-feedback">
+                            🏔️ 자연 탐험
+                        </button>
+                        <button class="travel-style-btn bg-gray-200 text-gray-700 p-3 rounded-lg text-sm touch-feedback">
+                            🏛️ 문화 체험
+                        </button>
+                        <button class="travel-style-btn bg-gray-200 text-gray-700 p-3 rounded-lg text-sm touch-feedback">
+                            🍜 맛집 투어
+                        </button>
+                        <button class="travel-style-btn bg-gray-200 text-gray-700 p-3 rounded-lg text-sm touch-feedback">
+                            🧘‍♀️ 힐링 여행
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 안전 정보 바텀시트 -->
+        <div id="safetyBottomSheet" class="bottom-sheet">
+            <div class="bottom-sheet-handle"></div>
+            <div class="p-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-shield-check mr-2 text-green-500"></i>
+                    안전 정보 센터
+                </h3>
+                
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="bg-green-100 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🏥</div>
+                        <div class="text-xs text-gray-600">응급실</div>
+                        <div class="text-sm font-bold text-green-700">2분 거리</div>
+                    </div>
+                    <div class="bg-red-100 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">⚡</div>
+                        <div class="text-xs text-gray-600">AED</div>
+                        <div class="text-sm font-bold text-red-700">1분 거리</div>
+                    </div>
+                    <div class="bg-blue-100 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">💊</div>
+                        <div class="text-xs text-gray-600">24시간 약국</div>
+                        <div class="text-sm font-bold text-blue-700">3분 거리</div>
+                    </div>
+                    <div class="bg-purple-100 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">👨‍⚕️</div>
+                        <div class="text-xs text-gray-600">의료진 상담</div>
+                        <div class="text-sm font-bold text-purple-700">24시간</div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">오늘의 안전 알림</h4>
+                    <div class="space-y-2">
+                        <div class="bg-green-50 border-l-4 border-green-400 p-3 rounded">
+                            <div class="flex items-center">
+                                <span class="text-green-600 mr-2">✅</span>
+                                <span class="text-sm text-green-800">전국 관광지 평균 안전도 87점 달성</span>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                            <div class="flex items-center">
+                                <span class="text-blue-600 mr-2">☀️</span>
+                                <span class="text-sm text-blue-800">이번 주말 전국 맑음, 야외활동 최적</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 응급상황 모달 -->
+        <div id="emergencyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6">
+                <div class="text-center mb-6">
+                    <div class="text-6xl text-red-500 mb-4">🚨</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">응급상황 대응</h3>
+                    <p class="text-gray-600 text-sm">상황을 선택하면 최적의 병원을 안내합니다</p>
+                </div>
+                
+                <div class="space-y-3 mb-6">
+                    <button class="emergency-type-btn w-full bg-red-500 text-white p-4 rounded-xl hover:bg-red-600 transition-colors touch-feedback" data-emergency="chest_pain">
+                        <i class="fas fa-heart mr-3"></i>가슴 통증 / 호흡곤란
+                    </button>
+                    <button class="emergency-type-btn w-full bg-red-500 text-white p-4 rounded-xl hover:bg-red-600 transition-colors touch-feedback" data-emergency="unconscious">
+                        <i class="fas fa-user-injured mr-3"></i>의식잃음 / 쓰러짐
+                    </button>
+                    <button class="emergency-type-btn w-full bg-red-500 text-white p-4 rounded-xl hover:bg-red-600 transition-colors touch-feedback" data-emergency="bleeding">
+                        <i class="fas fa-droplet mr-3"></i>심한 출혈 / 외상
+                    </button>
+                    <button class="emergency-type-btn w-full bg-red-500 text-white p-4 rounded-xl hover:bg-red-600 transition-colors touch-feedback" data-emergency="other">
+                        <i class="fas fa-exclamation-triangle mr-3"></i>기타 응급상황
+                    </button>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="call119Mobile" class="flex-1 bg-green-500 text-white p-3 rounded-xl hover:bg-green-600 transition-colors touch-feedback">
+                        <i class="fas fa-phone mr-2"></i>119 신고
+                    </button>
+                    <button id="closeEmergencyModal" class="flex-1 bg-gray-500 text-white p-3 rounded-xl hover:bg-gray-600 transition-colors touch-feedback">
+                        취소
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 앱 설치 프롬프트 -->
+        <div id="installPrompt" class="install-prompt">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <div class="font-bold text-sm mb-1">📱 앱으로 설치하기</div>
+                    <div class="text-xs opacity-90">더 빠르고 편리하게 이용하세요</div>
+                </div>
+                <div class="flex space-x-2 ml-4">
+                    <button id="installApp" class="bg-white text-purple-600 px-3 py-1 rounded-lg text-sm font-medium touch-feedback">
+                        설치
+                    </button>
+                    <button id="dismissInstall" class="text-white opacity-75 touch-feedback">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 로딩 -->
+    <div id="mobileLoading" class="fixed inset-0 bg-white z-50 hidden flex items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p class="text-gray-600">안심 정보 로딩 중...</p>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let mobileMap;
+        let mobileMarkers = [];
+        let currentBottomSheet = null;
+        let deferredPrompt;
+        
+        // PWA 초기화
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    }, function(err) {
+                        console.log('ServiceWorker registration failed');
+                    });
+            });
+        }
+        
+        // 앱 설치 프롬프트
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // 설치 프롬프트 표시
+            setTimeout(() => {
+                document.getElementById('installPrompt').style.display = 'block';
+            }, 3000);
+        });
+        
+        // 모바일 지도 초기화
+        function initializeMobileMap() {
+            const container = document.getElementById('map');
+            const options = {
+                center: new kakao.maps.LatLng(37.5665, 126.9780),
+                level: 6,
+                mapTypeId: kakao.maps.MapTypeId.ROADMAP
+            };
+            
+            mobileMap = new kakao.maps.Map(container, options);
+            
+            // 터치 이벤트 처리
+            kakao.maps.event.addListener(mobileMap, 'click', function(mouseEvent) {
+                const latlng = mouseEvent.latLng;
+                showMobileLocationSafety(latlng);
+            });
+            
+            // 데모 데이터 로드
+            loadMobileDemoData();
+            
+            // 현재 위치 자동 확인 (모바일 전용)
+            getCurrentLocationMobile();
+        }
+        
+        // 모바일 데모 데이터
+        function loadMobileDemoData() {
+            const mobileDemo = [
+                {
+                    name: '제주 한라산',
+                    lat: 33.3617, lng: 126.5292,
+                    safetyScore: 92,
+                    features: ['종합병원 10분', '헬기 착륙장', 'AED 완비']
+                },
+                {
+                    name: '부산 해운대',
+                    lat: 35.1587, lng: 129.1604,
+                    safetyScore: 95,
+                    features: ['해상구조대', '24시간 응급실', '의료진 상주']
+                },
+                {
+                    name: '설악산 국립공원',
+                    lat: 38.1192, lng: 128.4651,
+                    safetyScore: 87,
+                    features: ['산악구조대', '응급헬기', '의료진 대기']
+                },
+                {
+                    name: '경주 불국사',
+                    lat: 35.7898, lng: 129.3320,
+                    safetyScore: 89,
+                    features: ['응급처치실', 'AED', '의료진 순찰']
+                }
+            ];
+            
+            mobileDemo.forEach(place => {
+                addMobileSafetyMarker(place);
+            });
+            
+            displayMobileRecommendations(mobileDemo);
+        }
+        
+        // 모바일 안전 마커 추가
+        function addMobileSafetyMarker(place) {
+            const position = new kakao.maps.LatLng(place.lat, place.lng);
+            
+            let markerColor = place.safetyScore >= 90 ? '#4CAF50' : 
+                             place.safetyScore >= 80 ? '#2196F3' : '#FFC107';
+            
+            const markerContent = `
+                <div class="marker-custom" style="background: linear-gradient(135deg, ${markerColor}, ${markerColor}dd)">
+                    🏆 ${place.safetyScore}
+                </div>
+            `;
+            
+            const customOverlay = new kakao.maps.CustomOverlay({
+                position: position,
+                content: markerContent,
+                yAnchor: 1
+            });
+            
+            customOverlay.setMap(mobileMap);
+            
+            // 터치 이벤트
+            const overlayElement = customOverlay.getContent();
+            overlayElement.addEventListener('click', function() {
+                showMobilePlaceInfo(place);
+                // 햅틱 피드백 (지원되는 경우)
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            });
+            
+            mobileMarkers.push({ overlay: customOverlay, data: place });
+        }
+        
+        // 모바일 장소 정보 표시
+        function showMobilePlaceInfo(place) {
+            // 진동 피드백
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+            
+            const alert = `🏆 ${place.name}\n\n` +
+                         `🛡️ 안전도: ${place.safetyScore}/100점\n\n` +
+                         `✅ 안심 포인트:\n${place.features.map(f => `• ${f}`).join('\n')}\n\n` +
+                         `완벽한 안전 시설로 가족 모두 안심하고 즐기실 수 있습니다! 😊`;
+            
+            if (confirm(alert + '\n\n📍 이 곳으로 이동하시겠습니까?')) {
+                mobileMap.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
+                mobileMap.setLevel(4);
+                showMobileNotification(`${place.name}로 이동했습니다! 🎯`);
+            }
+        }
+        
+        // 현재 위치 확인 (모바일)
+        function getCurrentLocationMobile() {
+            if (navigator.geolocation) {
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                };
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const latlng = new kakao.maps.LatLng(lat, lng);
+                        
+                        // 현재 위치 마커
+                        const currentLocationContent = `
+                            <div style="
+                                background: linear-gradient(135deg, #FF5722, #F44336);
+                                color: white;
+                                padding: 6px 12px;
+                                border-radius: 20px;
+                                font-size: 12px;
+                                font-weight: bold;
+                                box-shadow: 0 4px 12px rgba(255,87,34,0.6);
+                                border: 2px solid white;
+                                animation: pulse 2s infinite;
+                            ">
+                                📍 내 위치
+                            </div>
+                        `;
+                        
+                        const currentLocationOverlay = new kakao.maps.CustomOverlay({
+                            position: latlng,
+                            content: currentLocationContent,
+                            yAnchor: 1
+                        });
+                        
+                        currentLocationOverlay.setMap(mobileMap);
+                        
+                        // 지도 중심 이동
+                        mobileMap.setCenter(latlng);
+                        mobileMap.setLevel(5);
+                        
+                        // 현재 위치 안전도 표시
+                        showMobileLocationSafety(latlng);
+                        
+                        // 진동 피드백
+                        if (navigator.vibrate) {
+                            navigator.vibrate([200, 100, 200]);
+                        }
+                    },
+                    function(error) {
+                        console.log('위치 정보 오류:', error);
+                    },
+                    options
+                );
+            }
+        }
+        
+        // 위치 안전도 표시 (모바일)
+        function showMobileLocationSafety(latlng) {
+            const safetyScore = Math.floor(Math.random() * 15) + 85;
+            const overlay = document.getElementById('safetyOverlay');
+            const scoreElement = document.getElementById('currentScore');
+            
+            scoreElement.textContent = safetyScore;
+            overlay.querySelector('.score-circle').style.setProperty('--score-percent', safetyScore + '%');
+            
+            overlay.classList.remove('hidden');
+            
+            // 3초 후 자동 숨김
+            setTimeout(() => {
+                if (!overlay.classList.contains('hidden')) {
+                    overlay.classList.add('hidden');
+                }
+            }, 5000);
+        }
+        
+        // 바텀시트 관리
+        function showBottomSheet(sheetId) {
+            // 현재 열린 시트 닫기
+            if (currentBottomSheet) {
+                currentBottomSheet.classList.remove('show');
+            }
+            
+            // 새 시트 열기
+            const sheet = document.getElementById(sheetId);
+            if (sheet) {
+                sheet.classList.add('show');
+                currentBottomSheet = sheet;
+                
+                // 진동 피드백
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            }
+        }
+        
+        function hideBottomSheet() {
+            if (currentBottomSheet) {
+                currentBottomSheet.classList.remove('show');
+                currentBottomSheet = null;
+            }
+        }
+        
+        // 모바일 추천 장소 표시
+        function displayMobileRecommendations(places) {
+            const container = document.getElementById('mobileRecommendedPlaces');
+            container.innerHTML = '';
+            
+            places.forEach(place => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl shadow-lg p-4 touch-feedback';
+                card.style.cursor = 'pointer';
+                
+                const safetyColor = place.safetyScore >= 90 ? 'green' : 
+                                   place.safetyScore >= 80 ? 'blue' : 'yellow';
+                
+                card.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center text-2xl">
+                            ${place.name.includes('제주') ? '🏝️' : 
+                              place.name.includes('부산') ? '🏖️' : 
+                              place.name.includes('설악산') ? '🏔️' : '🏛️'}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-bold text-gray-800">${place.name}</h3>
+                                <span class="bg-${safetyColor}-100 text-${safetyColor}-800 px-2 py-1 rounded-full text-xs font-bold">
+                                    🏆 ${place.safetyScore}점
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-600 space-y-1">
+                                ${place.features.slice(0, 2).map(feature => 
+                                    `<div>✅ ${feature}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', function() {
+                    moveToMobilePlace(place.lat, place.lng, place.name);
+                    hideBottomSheet();
+                });
+                
+                container.appendChild(card);
+            });
+        }
+        
+        // 장소로 이동 (모바일)
+        function moveToMobilePlace(lat, lng, name) {
+            const position = new kakao.maps.LatLng(lat, lng);
+            mobileMap.setCenter(position);
+            mobileMap.setLevel(4);
+            
+            showMobileLocationSafety(position);
+            showMobileNotification(`${name}로 이동했습니다! 🌟`);
+            
+            // 진동 피드백
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }
+        
+        // 모바일 알림
+        function showMobileNotification(message, duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `
+                fixed top-4 left-4 right-4 z-50
+                bg-white border-l-4 border-green-500 
+                rounded-lg shadow-lg p-4
+                transform transition-all duration-300
+                translate-y-[-100px] opacity-0
+            `;
+            
+            notification.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="text-green-500 text-xl">✅</div>
+                    <div class="flex-1 text-sm text-gray-800">${message}</div>
+                    <button class="text-gray-400" onclick="this.parentElement.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 애니메이션
+            setTimeout(() => {
+                notification.style.transform = 'translateY(0)';
+                notification.style.opacity = '1';
+            }, 100);
+            
+            // 자동 제거
+            setTimeout(() => {
+                notification.style.transform = 'translateY(-100px)';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+        
+        // 이벤트 리스너들
+        document.addEventListener('DOMContentLoaded', function() {
+            // 지도 초기화
+            initializeMobileMap();
+            
+            // 플로팅 버튼들
+            document.getElementById('emergencyFloatingBtn').addEventListener('click', function() {
+                document.getElementById('emergencyModal').classList.remove('hidden');
+            });
+            
+            document.getElementById('locationFloatingBtn').addEventListener('click', function() {
+                getCurrentLocationMobile();
+                showMobileNotification('현재 위치를 확인합니다 📍');
+            });
+            
+            document.getElementById('searchFloatingBtn').addEventListener('click', function() {
+                showBottomSheet('searchBottomSheet');
+            });
+            
+            // 하단 네비게이션
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 활성 상태 변경
+                    document.querySelectorAll('.nav-btn').forEach(b => {
+                        b.classList.remove('text-blue-600');
+                        b.classList.add('text-gray-400');
+                    });
+                    this.classList.remove('text-gray-400');
+                    this.classList.add('text-blue-600');
+                    
+                    // 해당 바텀시트 표시
+                    const navId = this.id.replace('nav', '').toLowerCase();
+                    if (navId === 'map') {
+                        hideBottomSheet();
+                    } else if (navId === 'recommend') {
+                        showBottomSheet('recommendBottomSheet');
+                    } else if (navId === 'family') {
+                        showBottomSheet('familyBottomSheet');
+                    } else if (navId === 'safety') {
+                        showBottomSheet('safetyBottomSheet');
+                    }
+                });
+            });
+            
+            // 검색 기능
+            document.getElementById('mobileSearchBtn').addEventListener('click', function() {
+                const query = document.getElementById('mobileSearchInput').value.trim();
+                performMobileSearch(query);
+            });
+            
+            document.getElementById('mobileSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.trim();
+                    performMobileSearch(query);
+                }
+            });
+            
+            // 검색 태그들
+            document.querySelectorAll('.search-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const query = this.dataset.search;
+                    performMobileSearch(query);
+                });
+            });
+            
+            // 응급상황 모달
+            document.querySelectorAll('.emergency-type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const type = this.dataset.emergency;
+                    handleMobileEmergency(type);
+                });
+            });
+            
+            document.getElementById('call119Mobile').addEventListener('click', function() {
+                if (confirm('119에 신고하시겠습니까?\n\n실제 응급상황에서는 즉시 119에 신고하세요.')) {
+                    // 실제로는 tel:119 링크를 사용
+                    showMobileNotification('119 신고가 접수되었습니다 🚨');
+                }
+            });
+            
+            document.getElementById('closeEmergencyModal').addEventListener('click', function() {
+                document.getElementById('emergencyModal').classList.add('hidden');
+            });
+            
+            // 오버레이 닫기
+            document.getElementById('closeOverlay').addEventListener('click', function() {
+                document.getElementById('safetyOverlay').classList.add('hidden');
+            });
+            
+            // PWA 설치 버튼
+            document.getElementById('installApp').addEventListener('click', function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        deferredPrompt = null;
+                        document.getElementById('installPrompt').style.display = 'none';
+                    });
+                }
+            });
+            
+            document.getElementById('dismissInstall').addEventListener('click', function() {
+                document.getElementById('installPrompt').style.display = 'none';
+            });
+            
+            // 바텀시트 배경 터치시 닫기
+            document.addEventListener('click', function(e) {
+                if (currentBottomSheet && !currentBottomSheet.contains(e.target) && 
+                    !e.target.closest('.nav-btn') && 
+                    !e.target.closest('.floating-btn')) {
+                    hideBottomSheet();
+                }
+            });
+            
+            // 환영 메시지
+            setTimeout(() => {
+                showMobileNotification('안심여행 스텝 모바일에 오신 것을 환영합니다! 🎉', 4000);
+            }, 1000);
+        });
+        
+        // 모바일 검색 수행
+        function performMobileSearch(query) {
+            if (!query) return;
+            
+            showMobileLoading(true);
+            
+            const ps = new kakao.maps.services.Places();
+            ps.keywordSearch(query, function(data, status, pagination) {
+                showMobileLoading(false);
+                
+                if (status === kakao.maps.services.Status.OK) {
+                    const place = data[0];
+                    const position = new kakao.maps.LatLng(place.y, place.x);
+                    
+                    mobileMap.setCenter(position);
+                    mobileMap.setLevel(5);
+                    
+                    showMobileLocationSafety(position);
+                    showMobileNotification(`${place.place_name}을(를) 찾았습니다! 🎯`);
+                    
+                    // 최근 검색어에 추가
+                    addToRecentSearches(query);
+                    
+                    hideBottomSheet();
+                } else {
+                    showMobileNotification('검색 결과가 없습니다 🔍');
+                }
+            });
+        }
+        
+        // 최근 검색어 추가
+        function addToRecentSearches(query) {
+            const recentContainer = document.getElementById('recentSearches');
+            const recentItem = document.createElement('div');
+            recentItem.className = 'flex items-center justify-between py-2 border-b border-gray-100';
+            
+            recentItem.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-clock text-gray-400"></i>
+                    <span class="text-sm">${query}</span>
+                </div>
+                <button class="text-gray-400 text-sm" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            recentItem.addEventListener('click', function() {
+                performMobileSearch(query);
+            });
+            
+            recentContainer.insertBefore(recentItem, recentContainer.firstChild);
+        }
+        
+        // 모바일 응급상황 처리
+        function handleMobileEmergency(type) {
+            const emergencyInfo = {
+                chest_pain: { hospital: '심장내과', time: '3분', name: '강남세브란스병원' },
+                unconscious: { hospital: '응급실', time: '2분', name: '삼성서울병원' },
+                bleeding: { hospital: '외상외과', time: '4분', name: '서울아산병원' },
+                other: { hospital: '응급실', time: '5분', name: '서울대학교병원' }
+            };
+            
+            const info = emergencyInfo[type];
+            
+            // 진동 피드백
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+            
+            alert(`🚨 응급상황 대응 안내\n\n` +
+                  `🏥 최적 병원: ${info.name}\n` +
+                  `⚕️ 전문과: ${info.hospital}\n` +
+                  `🚗 예상시간: ${info.time}\n\n` +
+                  `즉시 119에 신고하고 병원으로 이동하세요.\n\n` +
+                  `📍 병원으로 길안내를 시작합니다.`);
+            
+            document.getElementById('emergencyModal').classList.add('hidden');
+            showMobileNotification(`${info.name} 길안내를 시작합니다 🚗`);
+        }
+        
+        // 모바일 로딩
+        function showMobileLoading(show) {
+            const loading = document.getElementById('mobileLoading');
+            if (show) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+        
+        // 터치 제스처 처리
+        let touchStartY = 0;
+        let touchEndY = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const swipeDistance = touchStartY - touchEndY;
+            
+            // 위로 스와이프 (바텀시트 열기)
+            if (swipeDistance > 50 && !currentBottomSheet) {
+                showBottomSheet('recommendBottomSheet');
+            }
+            // 아래로 스와이프 (바텀시트 닫기)
+            else if (swipeDistance < -50 && currentBottomSheet) {
+                hideBottomSheet();
+            }
+        }
+    </script>
+</body>
+</html>

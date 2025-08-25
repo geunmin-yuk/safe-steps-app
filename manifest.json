@@ -1,0 +1,80 @@
+{
+  "name": "안심여행 스텝 - Safe Steps",
+  "short_name": "안심여행",
+  "description": "모든 가족이 함께 즐기는 안전한 여행",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196F3",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "ko",
+  "categories": ["travel", "lifestyle", "health"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%232196F3' d='M50 10c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40z'/%3E%3Cpath fill='white' d='M50 20c-16.6 0-30 13.4-30 30s13.4 30 30 30 30-13.4 30-30-13.4-30-30-30z'/%3E%3Cpath fill='%234CAF50' d='M50 30c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20z'/%3E%3Ctext x='50' y='58' text-anchor='middle' font-size='20' fill='white'%3E✈%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%232196F3' d='M50 10c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40z'/%3E%3Cpath fill='white' d='M50 20c-16.6 0-30 13.4-30 30s13.4 30 30 30 30-13.4 30-30-13.4-30-30-30z'/%3E%3Cpath fill='%234CAF50' d='M50 30c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20z'/%3E%3Ctext x='50' y='58' text-anchor='middle' font-size='20' fill='white'%3E✈%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "응급상황",
+      "short_name": "응급",
+      "description": "긴급한 응급상황 대응",
+      "url": "/?emergency=true",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23f44336'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='30' fill='white'%3E🚨%3C/text%3E%3C/svg%3E",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "내 위치 안전도",
+      "short_name": "안전도",
+      "description": "현재 위치의 안전도 확인",
+      "url": "/?location=true",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%234CAF50'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='30' fill='white'%3E🛡️%3C/text%3E%3C/svg%3E",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "관광지 검색",
+      "short_name": "검색",
+      "description": "안심 관광지 검색",
+      "url": "/?search=true",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%232196F3'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='30' fill='white'%3E🔍%3C/text%3E%3C/svg%3E",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='390' height='844' viewBox='0 0 390 844'%3E%3Crect width='390' height='844' fill='%23f8fafc'/%3E%3Crect x='20' y='80' width='350' height='200' rx='10' fill='white' stroke='%23e5e7eb'/%3E%3Ctext x='195' y='120' text-anchor='middle' font-size='18' font-weight='bold' fill='%232563eb'%3E안심여행 스텝%3C/text%3E%3Ctext x='195' y='140' text-anchor='middle' font-size='12' fill='%236b7280'%3E모든 가족이 함께 즐기는 안전한 여행%3C/text%3E%3Crect x='40' y='160' width='310' height='100' rx='8' fill='%23f0f9ff'/%3E%3Ctext x='195' y='190' text-anchor='middle' font-size='14' font-weight='bold' fill='%230ea5e9'%3E🌟 현재 위치는 완벽한 안심 지역입니다!%3C/text%3E%3Ctext x='195' y='210' text-anchor='middle' font-size='12' fill='%236b7280'%3E95/100점 - 24시간 의료진 대기%3C/text%3E%3Ctext x='195' y='240' text-anchor='middle' font-size='10' fill='%234ade80'%3E✅ 5분내 종합병원 ✅ 1분내 AED ✅ 3분내 약국%3C/text%3E%3Crect x='20' y='300' width='350' height='300' rx='10' fill='%23e5e7eb'/%3E%3Ctext x='195' y='330' text-anchor='middle' font-size='14' font-weight='bold' fill='%236b7280'%3E카카오맵 기반 실시간 안심 지도%3C/text%3E%3Ccircle cx='195' cy='450' r='60' fill='%234CAF50' fill-opacity='0.3' stroke='%234CAF50' stroke-width='2'/%3E%3Ccircle cx='195' cy='450' r='30' fill='%234CAF50' fill-opacity='0.6'/%3E%3Ctext x='195' y='460' text-anchor='middle' font-size='12' fill='white'%3E🏆 95점%3C/text%3E%3C/svg%3E",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://safesteps.kr"
+    }
+  ],
+  "prefer_related_applications": false
+}
